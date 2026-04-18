@@ -1,0 +1,1 @@
+- tenemos la app que lee el ultimo modelo
