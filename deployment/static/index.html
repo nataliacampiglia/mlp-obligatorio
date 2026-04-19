@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inflación en Alimentos</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #000;
+      padding: 48px 24px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .form-wrapper {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      font-size: 1rem;
+    }
+
+    .field input,
+    .field select {
+      padding: 6px 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 280px;
+      background: #fff;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      margin: 28px 0 24px;
+    }
+
+    button {
+      background-color: #4285F4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 32px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover { background-color: #3367d6; }
+
+    .result-box {
+      border: 1.5px solid #000;
+      padding: 12px 16px;
+      font-size: 1rem;
+      min-height: 44px;
+    }
+
+    .result-box span { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Inflación en Alimentos</h1>
+
+  <div class="form-wrapper">
+    <div class="field">
+      <label for="fecha">Fecha</label>
+      <input type="month" id="fecha" />
+    </div>
+
+    <div class="field">
+      <label for="pais">País</label>
+      <select id="pais">
+        <option value="">Cargando...</option>
+      </select>
+    </div>
+
+    <div class="btn-row">
+      <button onclick="submitForm()">Submit</button>
+    </div>
+
+    <div class="result-box">
+      <span>Predicción:</span> <span id="resultado"></span>
+    </div>
+  </div>
+
+  <script>
+    async function loadCountries() {
+      const res = await fetch('/countries');
+      const data = await res.json();
+      const select = document.getElementById('pais');
+      select.innerHTML = data.countries
+        .map(c => `<option value="${c}">${c}</option>`)
+        .join('');
+    }
+
+    async function submitForm() {
+      const fechaVal = document.getElementById('fecha').value;
+      const country = document.getElementById('pais').value;
+      const resultado = document.getElementById('resultado');
+
+      if (!fechaVal || !country) {
+        resultado.textContent = 'Completá todos los campos.';
+        return;
+      }
+
+      const [year, month] = fechaVal.split('-').map(Number);
+
+      resultado.textContent = 'Calculando...';
+
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country, year, month }),
+      });
+
+      const data = await res.json();
+      resultado.textContent = data.inflation !== null
+        ? `${data.inflation.toFixed(2)} %`
+        : 'Modelo no disponible aún.';
+    }
+
+    loadCountries();
+  </script>
+</body>
+</html>
