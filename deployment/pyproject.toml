@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "food-inflation-predictor"
+version = "0.1.0"
+description = "Predictor de inflación en alimentos"
+authors = []
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+pydantic = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
