@@ -64,7 +64,8 @@
       cursor: pointer;
     }
 
-    button:hover { background-color: #3367d6; }
+    button:hover:not(:disabled) { background-color: #3367d6; }
+    button:disabled { background-color: #aaa; cursor: not-allowed; }
 
     .result-box {
       border: 1.5px solid #000;
@@ -93,7 +94,7 @@
     </div>
 
     <div class="btn-row">
-      <button onclick="submitForm()">Submit</button>
+      <button id="submitBtn" onclick="submitForm()" disabled>Cargando modelo...</button>
     </div>
 
     <div class="result-box">
@@ -102,12 +103,26 @@
   </div>
 
   <script>
+    function initDateRange() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const toMonthStr = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+
+      const minDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      const maxDate = new Date(now.getFullYear() + 1, now.getMonth(), 1);
+
+      const input = document.getElementById('fecha');
+      input.min = toMonthStr(minDate);
+      input.max = toMonthStr(maxDate);
+      input.value = toMonthStr(minDate);
+    }
+
     async function loadCountries() {
       const res = await fetch('/countries');
       const data = await res.json();
       const select = document.getElementById('pais');
       select.innerHTML = data.countries
-        .map(c => `<option value="${c}">${c}</option>`)
+        .map(c => `<option value="${c.code}">${c.name}</option>`)
         .join('');
     }
 
@@ -137,7 +152,25 @@
         : 'Modelo no disponible aún.';
     }
 
+    async function pollReady() {
+      const btn = document.getElementById('submitBtn');
+      while (true) {
+        try {
+          const res = await fetch('/status');
+          const data = await res.json();
+          if (data.ready) {
+            btn.disabled = false;
+            btn.textContent = 'Submit';
+            return;
+          }
+        } catch (_) {}
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+
+    initDateRange();
     loadCountries();
+    pollReady();
   </script>
 </body>
 </html>
