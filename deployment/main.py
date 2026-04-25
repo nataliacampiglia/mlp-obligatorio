@@ -5,8 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from constants import COUNTRIES
-from services.prediction import load_model, predict
+from services.prediction import load_model, predict, get_country_options, is_ready
 
 
 @asynccontextmanager
@@ -30,9 +29,14 @@ def index():
     return FileResponse("static/index.html")
 
 
+@app.get("/status")
+def status():
+    return {"ready": is_ready()}
+
+
 @app.get("/countries")
 def get_countries():
-    return {"countries": sorted(COUNTRIES)}
+    return {"countries": get_country_options()}
 
 
 @app.post("/predict")
