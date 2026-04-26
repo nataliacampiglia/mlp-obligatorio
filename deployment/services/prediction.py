@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pandas as pd
 import joblib
@@ -6,6 +7,8 @@ import importlib.util
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 _constants_spec = importlib.util.spec_from_file_location("root_constants", ROOT_DIR / "constants.py")
 _constants_module = importlib.util.module_from_spec(_constants_spec)
 assert _constants_spec is not None and _constants_spec.loader is not None
@@ -23,6 +26,7 @@ _le       = None
 _features = None
 _df_raw   = None
 _df_feat  = None
+_version  = None
 
 
 def _build_features(df: pd.DataFrame, le) -> pd.DataFrame:
@@ -46,6 +50,10 @@ def is_ready() -> bool:
     return _model is not None
 
 
+def get_model_version() -> str | None:
+    return _version
+
+
 def get_country_options() -> list[dict]:
     if _df_raw is None:
         return []
@@ -58,11 +66,12 @@ def get_country_options() -> list[dict]:
 
 
 def load_model():
-    global _model, _le, _features, _df_raw, _df_feat
+    global _model, _le, _features, _df_raw, _df_feat, _version
 
     api      = wandb.Api()
     artifact = api.artifact(f"{api.default_entity}/{WANDB_PROJECT}/{ARTIFACT_NAME}")
     artifact_dir = artifact.download(root=str(MODEL_DIR))
+    _version = artifact.version
 
     bundle    = joblib.load(Path(artifact_dir) / "model.pkl")
     _model    = bundle["model"]
