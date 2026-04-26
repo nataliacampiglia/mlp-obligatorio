@@ -2,11 +2,20 @@ import numpy as np
 import pandas as pd
 import joblib
 import wandb
+import importlib.util
 from pathlib import Path
-from constants import WANDB_PRODUCTION_ARTIFACT, WANDB_PROJECT
 
-MODEL_DIR      = Path(__file__).parents[2] / "dev"
-CSV_PATH       = Path(__file__).parents[2] / "model-building" / "food_price_inflation.csv"
+ROOT_DIR = Path(__file__).parents[2]
+_constants_spec = importlib.util.spec_from_file_location("root_constants", ROOT_DIR / "constants.py")
+_constants_module = importlib.util.module_from_spec(_constants_spec)
+assert _constants_spec is not None and _constants_spec.loader is not None
+_constants_spec.loader.exec_module(_constants_module)
+WANDB_PRODUCTION_ARTIFACT = _constants_module.WANDB_PRODUCTION_ARTIFACT
+WANDB_PROJECT = _constants_module.WANDB_PROJECT
+FOOD_INFLATION_CSV_FILENAME = _constants_module.FOOD_INFLATION_CSV_FILENAME
+
+MODEL_DIR      = ROOT_DIR / "dev"
+CSV_PATH       = ROOT_DIR / "model-building" / FOOD_INFLATION_CSV_FILENAME
 ARTIFACT_NAME = WANDB_PRODUCTION_ARTIFACT
 
 _model    = None
