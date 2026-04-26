@@ -3,11 +3,11 @@ import pandas as pd
 import joblib
 import wandb
 from pathlib import Path
+from constants import WANDB_PRODUCTION_ARTIFACT, WANDB_PROJECT
 
 MODEL_DIR      = Path(__file__).parents[2] / "dev"
 CSV_PATH       = Path(__file__).parents[2] / "model-building" / "food_price_inflation.csv"
-WANDB_PROJECT  = "food-inflation-forecasting"
-ARTIFACT_NAME  = "food-inflation-model:production"
+ARTIFACT_NAME = WANDB_PRODUCTION_ARTIFACT
 
 _model    = None
 _le       = None
