@@ -1,0 +1,6 @@
+WANDB_PROJECT = "food-inflation-forecasting"
+WANDB_MODEL_NAME = "food-inflation-model"
+WANDB_ALIAS_STAGING = "staging"
+WANDB_ALIAS_PRODUCTION = "production"
+WANDB_ALIAS_LATEST = "latest"
+WANDB_PRODUCTION_ARTIFACT = f"{WANDB_MODEL_NAME}:{WANDB_ALIAS_PRODUCTION}"
