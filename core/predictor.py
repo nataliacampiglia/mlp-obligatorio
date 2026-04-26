@@ -50,6 +50,10 @@ class FoodInflationPredictor(InflationPredictor):
         return [{"code": r.country, "name": r.country_name} for r in mapping.itertuples()]
 
     def predict(self, country: str, year: int, month: int) -> float | None:
+        # Si target_date está en los datos históricos, predice directamente con las features precalculadas.
+        # Si está en el futuro, predice mes a mes desde last_date hasta target_date,
+        # usando cada predicción como lag del mes siguiente — necesario porque el modelo
+        # requiere features de lag (lag1..lag12, rolling means, yoy) que aún no existen.
         if country not in self._le.classes_:
             return None
 
