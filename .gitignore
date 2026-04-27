@@ -211,8 +211,7 @@ __marimo__/
 
 
 
-# model-building
-model-building/model.pkl
+# model artifacts
+**/model.pkl
 model-building/metrics.json
 model-building/wandb/
-model.pkl
