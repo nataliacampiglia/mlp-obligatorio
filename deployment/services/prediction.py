@@ -40,7 +40,7 @@ def get_country_options() -> list[dict]:
 
 
 def load_model():
-    global _predictor
+    global _predictor, _version
 
     api          = wandb.Api()
     artifact     = api.artifact(f"{api.default_entity}/{WANDB_PROJECT}/{ARTIFACT_NAME}")
