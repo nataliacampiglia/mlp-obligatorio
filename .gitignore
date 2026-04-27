@@ -215,3 +215,4 @@ __marimo__/
 model-building/model.pkl
 model-building/metrics.json
 model-building/wandb/
+model.pkl
