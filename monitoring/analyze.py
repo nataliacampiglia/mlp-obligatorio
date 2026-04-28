@@ -15,10 +15,22 @@ import plotly.express as px
 import streamlit as st
 
 LOGS_PATH = Path(__file__).parent / "logs" / "predictions.jsonl"
+HISTORICAL_CSV = Path(__file__).parents[1] / "model-building" / "food_price_inflation.csv"
+HISTORICAL_YEARS = 10
 
 ANOMALY_Z_THRESHOLD = 3.0
 OOD_FUTURE_MONTHS_WARN = 24
 OOD_FUTURE_MONTHS_HEAVY = 60
+
+
+@st.cache_data(ttl=300)
+def load_historical() -> pd.DataFrame:
+    if not HISTORICAL_CSV.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(HISTORICAL_CSV, usecols=["REF_AREA", "TIME_PERIOD", "OBS_VALUE"])
+    df.columns = ["country", "date", "value"]
+    df["date"] = pd.to_datetime(df["date"])
+    return df
 
 
 @st.cache_data(ttl=10)
@@ -194,6 +206,71 @@ def panel_vs_naive(df: pd.DataFrame) -> None:
     st.plotly_chart(fig, use_container_width=True)
 
 
+def panel_top_country_vs_history(df: pd.DataFrame, hist: pd.DataFrame) -> None:
+    st.subheader("G — País más predicho: histórico vs predicciones")
+    st.caption(
+        f"Para el país más consultado, dibujamos los últimos {HISTORICAL_YEARS} años de inflación real "
+        "(serie histórica) y por encima las predicciones futuras loggeadas. Sirve como sanity check visual: "
+        "¿las predicciones se ven como una continuación natural de la serie, o se despegan?"
+    )
+
+    if df.empty:
+        st.info("Sin logs.")
+        return
+    if hist.empty:
+        st.warning("No se encontró el CSV histórico.")
+        return
+
+    top_country = df["country"].value_counts().idxmax()
+    top_count = int(df["country"].value_counts().max())
+    st.metric(f"Más predicho", f"{top_country} ({top_count} predicciones)")
+
+    country_hist = hist[hist["country"] == top_country].sort_values("date")
+    if country_hist.empty:
+        st.warning(f"{top_country} no aparece en el CSV histórico — probablemente OOD.")
+        return
+
+    cutoff = country_hist["date"].max() - pd.DateOffset(years=HISTORICAL_YEARS)
+    country_hist = country_hist[country_hist["date"] >= cutoff]
+
+    country_preds = df[df["country"] == top_country].dropna(subset=["prediction"])
+
+    fig = px.line(
+        country_hist,
+        x="date",
+        y="value",
+        title=f"{top_country} — últimos {HISTORICAL_YEARS} años (real) + predicciones loggeadas",
+        labels={"date": "Fecha", "value": "Inflación alimentaria (%)"},
+    )
+    fig.data[0].name = "Histórico real"
+    fig.data[0].showlegend = True
+
+    if not country_preds.empty:
+        fig.add_scatter(
+            x=country_preds["target_date"],
+            y=country_preds["prediction"],
+            mode="markers",
+            name="Predicciones",
+            marker=dict(size=9, color="#e74c3c", symbol="diamond"),
+            hovertext=[
+                f"{r.year}-{r.month:02d} → {r.prediction:.2f}%"
+                for r in country_preds.itertuples()
+            ],
+            hoverinfo="text",
+        )
+
+    last_real_date = country_hist["date"].max().to_pydatetime()
+    fig.add_vline(
+        x=last_real_date.timestamp() * 1000,
+        line_dash="dot",
+        line_color="gray",
+        annotation_text="último dato real",
+        annotation_position="top",
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
 def panel_drilldown(df: pd.DataFrame) -> None:
     st.subheader("E — Drill-down por predicción")
     st.caption("Inspección puntual: para una predicción específica, todos los flags y comparaciones.")
@@ -255,6 +332,7 @@ def main() -> None:
     st.caption("Cierra el feedback loop de CD4ML. Todo deriva de monitoring/logs/predictions.jsonl.")
 
     df = load_logs()
+    hist = load_historical()
     if df.empty:
         st.warning("No hay logs todavía. Levantá la API y hacé alguna predicción para popular el dashboard.")
         return
@@ -269,6 +347,8 @@ def main() -> None:
     panel_ood(df)
     st.divider()
     panel_vs_naive(df)
+    st.divider()
+    panel_top_country_vs_history(df, hist)
     st.divider()
     panel_drilldown(df)
 
