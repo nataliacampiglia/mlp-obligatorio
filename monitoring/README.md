@@ -25,12 +25,22 @@ Formato JSONL para poder appendear sin parsear y leer con `pd.read_json(lines=Tr
 
 ## Qué se analiza
 
-Dos modos de monitoreo, complementarios:
+Todo se deriva exclusivamente de los logs (sin ground truth, sin CSV externo). Por eso no medimos accuracy: para fechas futuras (ej. Uruguay 2030) **el ground truth no existe todavía**. En producción real, eso se resolvería con un segundo tipo de evento (`{type: "actual", ...}`) loggeado cuando llega el dato real, pero queda fuera del alcance de la demo.
 
-- **Modo A — con ground truth**: para predicciones de fechas que ya pasaron, se compara contra el valor real del CSV de FAO. Métrica: MAE rolling.
-- **Modo B — sin ground truth**: para predicciones futuras (ej. Uruguay 2030). Se monitorea drift de inputs, sanity de outputs, OOD, comparación con baseline naive.
+Lo que sí podemos monitorear desde logs puros:
 
-Detalle en `analyze.py`.
+- **Usage analytics**: volumen, top países, fechas predichas, versiones servidas.
+- **Distribución de outputs**: ¿las predicciones caen en un rango sano? Auto-calibrado con p5/p95 de los propios logs.
+- **Anomaly detection**: predicciones con z-score alto contra el promedio del país en los logs.
+- **OOD scoring**: país conocido + cuánta extrapolación temporal hay (derivado de `months_from_last_known`).
+- **Modelo vs naive baseline**: cuánto se aleja la predicción del último valor conocido del país.
+- **Drill-down**: inspección puntual de una predicción con todos sus flags.
+
+Run:
+
+```bash
+streamlit run monitoring/analyze.py
+```
 
 ## Stack en producción real
 

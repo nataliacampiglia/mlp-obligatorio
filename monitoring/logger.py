@@ -2,7 +2,6 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
-from typing import Any
 
 LOGS_DIR = Path(__file__).parent / "logs"
 PREDICTIONS_LOG = LOGS_DIR / "predictions.jsonl"
@@ -16,7 +15,11 @@ def log_prediction(
     month: int,
     prediction: float | None,
     model_version: str,
-    extra: dict[str, Any] | None = None,
+    last_known_date: str | None = None,
+    last_known_value: float | None = None,
+    months_from_last_known: int | None = None,
+    country_in_training: bool | None = None,
+    is_future_prediction: bool | None = None,
 ) -> None:
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     record = {
@@ -26,9 +29,12 @@ def log_prediction(
         "year": year,
         "month": month,
         "prediction": prediction,
+        "last_known_date": last_known_date,
+        "last_known_value": last_known_value,
+        "months_from_last_known": months_from_last_known,
+        "country_in_training": country_in_training,
+        "is_future_prediction": is_future_prediction,
     }
-    if extra:
-        record["extra"] = extra
     line = json.dumps(record, ensure_ascii=False)
     with _lock:
         with PREDICTIONS_LOG.open("a", encoding="utf-8") as f:

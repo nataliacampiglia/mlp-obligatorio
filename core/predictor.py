@@ -41,6 +41,10 @@ class FoodInflationPredictor(InflationPredictor):
     def last_date(self, country: str) -> pd.Timestamp | None:
         return self._last_dates.get(country)
 
+    def last_value(self, country: str) -> float | None:
+        tail = self._tails.get(country)
+        return float(tail[-1]) if tail else None
+
     def countries(self) -> list[dict]:
         mapping = (
             self._df_feat[["country", "country_name"]]
