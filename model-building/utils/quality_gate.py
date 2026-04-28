@@ -36,6 +36,6 @@ def run_quality_gate(mae: float, project: str) -> tuple[bool, float | None]:
 
     if len(all_runs) > 1:
         best_mae = min(_get_test_mae(r) for r in all_runs[1:])
-        return mae < best_mae, best_mae
+        return mae < best_mae
 
-    return True, None
+    return True
