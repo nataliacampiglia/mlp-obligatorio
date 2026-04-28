@@ -28,7 +28,7 @@ def _get_test_mae(run) -> float | None:
         return None
 
 
-def run_quality_gate(mae: float, project: str) -> tuple[bool, float | None]:
+def run_quality_gate(mae: float, project: str) -> bool:
     """Compare mae against all previous runs. Returns (promote_to_production, best_previous_mae)."""
     api      = wandb.Api()
     runs     = api.runs(project, order="-created_at")
