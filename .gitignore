@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# Monitoring logs (run-time artifacts)
+monitoring/logs/*.jsonl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

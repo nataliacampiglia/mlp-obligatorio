@@ -9,8 +9,9 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from core.constants import WANDB_PRODUCTION_ARTIFACT, WANDB_PROJECT
-import core.predictor 
+import core.predictor
 from core.predictor import InflationPredictor
+from monitoring.logger import log_prediction
 
 # Pickle stores the class path at save time. Models saved before the move to core/
 # reference 'predictor' as the module — this alias lets them deserialize correctly.
@@ -46,4 +47,12 @@ def load_model():
 def predict(country: str, year: int, month: int) -> float | None:
     if _predictor is None:
         return None
-    return _predictor.predict(country, year, month)
+    value = _predictor.predict(country, year, month)
+    log_prediction(
+        country=country,
+        year=year,
+        month=month,
+        prediction=value,
+        model_version=ARTIFACT_NAME,
+    )
+    return value
