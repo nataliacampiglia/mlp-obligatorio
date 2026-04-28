@@ -75,6 +75,13 @@
     }
 
     .result-box span { font-weight: bold; }
+
+    footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #888;
+    }
   </style>
 </head>
 <body>
@@ -101,6 +108,8 @@
       <span>Predicción:</span> <span id="resultado"></span>
     </div>
   </div>
+
+  <footer id="model-version"></footer>
 
   <script>
     function initDateRange() {
@@ -161,6 +170,9 @@
           if (data.ready) {
             btn.disabled = false;
             btn.textContent = 'Submit';
+            if (data.version) {
+              document.getElementById('model-version').textContent = `Modelo: ${data.version}`;
+            }
             return;
           }
         } catch (_) {}

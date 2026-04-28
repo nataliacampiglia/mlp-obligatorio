@@ -1,4 +1,6 @@
 import sys
+import numpy as np
+import pandas as pd
 import joblib
 import wandb
 from pathlib import Path
@@ -20,10 +22,15 @@ MODEL_DIR     = ROOT_DIR / "dev"
 ARTIFACT_NAME = WANDB_PRODUCTION_ARTIFACT
 
 _predictor: InflationPredictor | None = None
+_version  = None
 
 
 def is_ready() -> bool:
     return _predictor is not None
+
+
+def get_model_version() -> str | None:
+    return _version
 
 
 def get_country_options() -> list[dict]:
@@ -33,11 +40,12 @@ def get_country_options() -> list[dict]:
 
 
 def load_model():
-    global _predictor
+    global _predictor, _version
 
     api          = wandb.Api()
     artifact     = api.artifact(f"{api.default_entity}/{WANDB_PROJECT}/{ARTIFACT_NAME}")
     artifact_dir = artifact.download(root=str(MODEL_DIR))
+    _version = artifact.version
 
     _predictor = joblib.load(Path(artifact_dir) / "model.pkl")
     print(f"Predictor loaded — {type(_predictor).__name__}, {len(_predictor.countries())} countries")
