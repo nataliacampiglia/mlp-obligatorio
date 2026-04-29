@@ -113,17 +113,17 @@
 
   <script>
     function initDateRange() {
-      const now = new Date();
       const pad = n => String(n).padStart(2, '0');
-      const toMonthStr = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+      const toMonthStr = (y, m) => `${y}-${pad(m)}`;
 
+      const now = new Date();
       const minDate = new Date(now.getFullYear(), now.getMonth(), 1);
       const maxDate = new Date(now.getFullYear() + 1, now.getMonth(), 1);
 
       const input = document.getElementById('fecha');
-      input.min = toMonthStr(minDate);
-      input.max = toMonthStr(maxDate);
-      input.value = toMonthStr(minDate);
+      input.min = toMonthStr(minDate.getFullYear(), minDate.getMonth() + 1);
+      input.max = toMonthStr(maxDate.getFullYear(), maxDate.getMonth() + 1);
+      input.value = '2026-05';
     }
 
     async function loadCountries() {
@@ -131,13 +131,13 @@
       const data = await res.json();
       const select = document.getElementById('pais');
       select.innerHTML = data.countries
-        .map(c => `<option value="${c.code}">${c.name}</option>`)
+        .map(c => `<option value="${c.code}"${c.code === 'URY' ? ' selected' : ''}>${c.name}</option>`)
         .join('');
     }
 
     async function submitForm() {
       const fechaVal = document.getElementById('fecha').value;
-      const country = document.getElementById('pais').value;
+      const country  = document.getElementById('pais').value;
       const resultado = document.getElementById('resultado');
 
       if (!fechaVal || !country) {
@@ -146,7 +146,6 @@
       }
 
       const [year, month] = fechaVal.split('-').map(Number);
-
       resultado.textContent = 'Calculando...';
 
       const res = await fetch('/predict', {
