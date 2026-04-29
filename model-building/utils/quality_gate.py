@@ -33,9 +33,12 @@ def run_quality_gate(mae: float, project: str) -> bool:
     api      = wandb.Api()
     runs     = api.runs(project, order="-created_at")
     all_runs = [r for r in runs if _get_test_mae(r) is not None]
-
+    print(all_runs)
     if len(all_runs) > 1:
-        best_mae = min(_get_test_mae(r) for r in all_runs[1:])
+        best_mae = min(_get_test_mae(r) for r in all_runs)
+        print(f"Best previous MAE: {best_mae}")
+        print(f"Current MAE: {mae}")
+        print(f"Promote to production: {mae < best_mae}")
         return mae < best_mae
 
     return True
