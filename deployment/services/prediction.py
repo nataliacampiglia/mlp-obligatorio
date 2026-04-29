@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import pandas as pd
 import joblib
+import pandas as pd
 import wandb
 from pathlib import Path
 
@@ -11,8 +12,9 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from core.constants import WANDB_PRODUCTION_ARTIFACT, WANDB_PROJECT
-import core.predictor 
+import core.predictor
 from core.predictor import InflationPredictor
+from monitoring.logger import log_prediction
 
 # Pickle stores the class path at save time. Models saved before the move to core/
 # reference 'predictor' as the module — this alias lets them deserialize correctly.
@@ -54,4 +56,28 @@ def load_model():
 def predict(country: str, year: int, month: int) -> float | None:
     if _predictor is None:
         return None
-    return _predictor.predict(country, year, month)
+    value = _predictor.predict(country, year, month)
+
+    last_date = _predictor.last_date(country)
+    last_value = _predictor.last_value(country)
+    target = pd.Timestamp(year=year, month=month, day=1)
+
+    months_from_last = None
+    is_future = None
+    if last_date is not None:
+        months_from_last = (target.year - last_date.year) * 12 + (target.month - last_date.month)
+        is_future = target > last_date
+
+    log_prediction(
+        country=country,
+        year=year,
+        month=month,
+        prediction=value,
+        model_version=ARTIFACT_NAME,
+        last_known_date=last_date.strftime("%Y-%m-%d") if last_date is not None else None,
+        last_known_value=last_value,
+        months_from_last_known=months_from_last,
+        country_in_training=last_date is not None,
+        is_future_prediction=is_future,
+    )
+    return value
