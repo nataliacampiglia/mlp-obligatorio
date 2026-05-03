@@ -3,7 +3,7 @@ import json
 import joblib
 import wandb
 
-from core.constants import WANDB_ALIAS_LATEST, WANDB_ALIAS_PRODUCTION, WANDB_ALIAS_STAGING
+from core.constants import WANDB_ALIAS_LATEST, WANDB_ALIAS_PRODUCTION
 
 
 def register_model(
@@ -18,7 +18,7 @@ def register_model(
     with open("metrics.json", "w") as f:
         json.dump(metrics, f, indent=2)
 
-    aliases = [WANDB_ALIAS_STAGING, WANDB_ALIAS_LATEST]
+    aliases = [WANDB_ALIAS_LATEST]
     if promote_to_production:
         aliases.append(WANDB_ALIAS_PRODUCTION)
 
